@@ -1,0 +1,94 @@
+{
+	"name": "NewBranch",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Employee_Data",
+						"type": "DatasetReference"
+					},
+					"name": "Employees",
+					"description": "Employee dataset"
+				},
+				{
+					"dataset": {
+						"referenceName": "DepartmentData",
+						"type": "DatasetReference"
+					},
+					"name": "DepartmentwNewBranch",
+					"description": "Dept Dataset"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DataDept2Output",
+						"type": "DatasetReference"
+					},
+					"name": "SimpleJoin"
+				},
+				{
+					"dataset": {
+						"referenceName": "DataDept2Output",
+						"type": "DatasetReference"
+					},
+					"name": "TotalEmployeeByDept"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "Aggregate"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Emp ID} as string,",
+				"          {Employee  Name} as string,",
+				"          Salary as string,",
+				"          {Dept ID} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Employees",
+				"source(output(",
+				"          {Dept ID} as string,",
+				"          {Dept name} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DepartmentwNewBranch",
+				"Employees, DepartmentwNewBranch join(Employees@{Dept ID} == DepartmentwNewBranch@{Dept ID},",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"Employees aggregate(groupBy({Dept ID}),",
+				"     {Total Employees} = count({Emp ID})) ~> Aggregate",
+				"join1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['Emp_Join_Dept'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          {Emp ID},",
+				"          {Employee  Name},",
+				"          Salary,",
+				"          {Dept ID} = DepartmentwNewBranch@{Dept ID},",
+				"          {Dept name}",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> SimpleJoin",
+				"Aggregate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['TotalEmpByDept'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> TotalEmployeeByDept"
+			]
+		}
+	}
+}

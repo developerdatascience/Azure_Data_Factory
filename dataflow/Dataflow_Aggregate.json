@@ -1,0 +1,83 @@
+{
+	"name": "Dataflow_Aggregate",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Employee_Data",
+						"type": "DatasetReference"
+					},
+					"name": "EmployeeData"
+				},
+				{
+					"dataset": {
+						"referenceName": "DepartmentData",
+						"type": "DatasetReference"
+					},
+					"name": "DeptData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "OutputEmpDept",
+						"type": "DatasetReference"
+					},
+					"name": "AggregationOutput",
+					"description": "OutputData",
+					"rejectedDataLinkedService": {
+						"referenceName": "Azure_Linked_Services",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "DeptAggregation"
+				},
+				{
+					"name": "DeptJoin"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Emp ID} as string,",
+				"          {Employee  Name} as string,",
+				"          Salary as string,",
+				"          {Dept ID} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> EmployeeData",
+				"source(output(",
+				"          {Dept ID} as string,",
+				"          {Dept name} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DeptData",
+				"EmployeeData aggregate(groupBy({Dept ID}),",
+				"     {Emp ID} = count({Emp ID}),",
+				"     partitionBy('hash', 1)) ~> DeptAggregation",
+				"DeptAggregation, DeptData join(DeptAggregation@{Dept ID} == DeptData@{Dept ID},",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     partitionBy('hash', 1),",
+				"     broadcast: 'auto')~> DeptJoin",
+				"DeptJoin sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['No_of_Emp_By_Dept'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Emp_Count = {Emp ID},",
+				"          {Dept name}",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> AggregationOutput"
+			]
+		}
+	}
+}

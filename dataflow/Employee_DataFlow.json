@@ -1,0 +1,52 @@
+{
+	"name": "Employee_DataFlow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Employee_Data",
+						"type": "DatasetReference"
+					},
+					"name": "FilterEmployeeData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DataDept2Output",
+						"type": "DatasetReference"
+					},
+					"name": "Dept2",
+					"description": "getting data for department 2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterDept",
+					"description": "Filter for department 2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Emp ID} as string,",
+				"          {Employee  Name} as string,",
+				"          Salary as string,",
+				"          {Dept ID} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FilterEmployeeData",
+				"FilterEmployeeData filter(equals({Dept ID}, '2'),",
+				"     partitionBy('hash', 1)) ~> FilterDept",
+				"FilterDept sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['FilterDept'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> Dept2"
+			]
+		}
+	}
+}

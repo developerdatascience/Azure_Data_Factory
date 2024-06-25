@@ -1,0 +1,31 @@
+{
+	"name": "trigger_pipeline",
+	"properties": {
+		"description": "if you upload customer file in storage. pl_event_trigger will get activated",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_event_trigger",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"fname": "@triggerBody().fileName",
+					"cname": "@triggerBody().folderPath"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/input/blobs/customer",
+			"blobPathEndsWith": ".txt",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/ae764c47-68b1-44e3-bde1-9ae84cc3c856/resourceGroups/Tutorial/providers/Microsoft.Storage/storageAccounts/storagedemoharendra",
+			"events": [
+				"Microsoft.Storage.BlobDeleted",
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

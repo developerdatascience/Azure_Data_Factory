@@ -1,0 +1,9 @@
+{
+	"name": "AzureFirstClass",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "fb5d4c11-8b85-4552-9f04-edfae2cf855c",
+		"tenantId": "b020b0ed-db55-4b14-96d5-5e0451ac8e1e"
+	}
+}

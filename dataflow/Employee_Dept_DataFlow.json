@@ -1,0 +1,78 @@
+{
+	"name": "Employee_Dept_DataFlow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Employee_Data",
+						"type": "DatasetReference"
+					},
+					"name": "EmployeeDataFlow",
+					"description": "Contains details about employees"
+				},
+				{
+					"dataset": {
+						"referenceName": "DepartmentData",
+						"type": "DatasetReference"
+					},
+					"name": "DepartmentDataFlow",
+					"description": "Contains Data about Department"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "OutputEmpDept",
+						"type": "DatasetReference"
+					},
+					"name": "EmpDeptMerge",
+					"description": "Output of Join"
+				}
+			],
+			"transformations": [
+				{
+					"name": "EmpDeptJoin",
+					"description": "Joining EmployeeData and DepartmentData"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Emp ID} as string,",
+				"          {Employee  Name} as string,",
+				"          Salary as string,",
+				"          {Dept ID} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> EmployeeDataFlow",
+				"source(output(",
+				"          {Dept ID} as string,",
+				"          {Dept name} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DepartmentDataFlow",
+				"EmployeeDataFlow, DepartmentDataFlow join(EmployeeDataFlow@{Dept ID} == DepartmentDataFlow@{Dept ID},",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> EmpDeptJoin",
+				"EmpDeptJoin sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['EmpDeptData'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          {Emp ID},",
+				"          {Employee  Name},",
+				"          Salary,",
+				"          {Dept ID} = EmployeeDataFlow@{Dept ID},",
+				"          {Dept name}",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> EmpDeptMerge"
+			]
+		}
+	}
+}
