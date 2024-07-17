@@ -1,0 +1,7 @@
+{
+	"name": "IRMySql",
+	"properties": {
+		"type": "SelfHosted",
+		"description": "Connecting to Mysql in mac"
+	}
+}
